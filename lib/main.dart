@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pokemon/bloc/bloc/pokemon_bloc.dart';
+import 'package:pokemon/pages/pokemons_list_page.dart';
+import 'package:pokemon/repositories/pokemon_repository.dart';
 
 void main() => runApp(const MyApp());
 
@@ -8,15 +12,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Material App',
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Material App Bar'),
+      debugShowCheckedModeBanner: false,
+      title: "Who's That Pokémon?",
+      initialRoute: 'list',
+      routes: {
+        'list': (context) => BlocProvider(
+          create: (context) => PokemonBloc(PokemonRepository())..add(LoadPokemons()),
+          child: const PokemonsListPage(),
         ),
-        body: const Center(
-          child: Text('Hola Mundo!!'),
-        ),
-      ),
+        // Add other routes here
+      },
     );
   }
 }
