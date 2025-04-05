@@ -97,7 +97,6 @@ flutter:
 flutter_native_splash:
   color: "#ffffff" # Background color
   image: assets/images/pokeapi.png # Your new logo path
-  branding: assets/images/pokeapi.png # Optional smaller logo at the bottom
   android_12:
     image: assets/images/pokeapi.png
     icon_background_color: "#ffffff"
