@@ -37,6 +37,8 @@ class PokemonListTile extends StatelessWidget {
         color: Colors.grey,
       ),
       onTap: () {
+        // When the ListTile is tapped, it dispatches an event to load the details of the selected Pokemon.
+        // The event is handled by the SinglePokemonBloc, which is responsible for managing the details of a single Pokemon.
         context.read<SinglePokemonBloc>().add(
           LoadSinglePokemon(name: pokemon.name),
         );

@@ -21,6 +21,8 @@ class PokemonListView extends StatelessWidget {
       controller: scrollController,
       itemCount: state.pokemons.length + (state.hasReachedMax ? 0 : 1),
       itemBuilder: (context, index) {
+        // If the index is equal to the length of the list, it means we are at the end of the list.
+        // In this case, we can show a loading indicator to indicate that more data is being loaded.
         if (index >= state.pokemons.length) {
           return const Center(child: CircularProgressIndicator());
         }
