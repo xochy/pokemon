@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pokemon/bloc/pokemons/pokemon_bloc.dart';
-import 'package:pokemon/bloc/pokemon/single_pokemon_bloc.dart';
-import 'package:pokemon/models/pokemon.dart';
+import 'package:pokemon/widgets/pokemon_details_dialog.dart';
+import 'package:pokemon/widgets/pokemon_list_view.dart';
+import 'package:pokemon/widgets/styled_title.dart';
+import 'package:pokemon_package/pokemon_package.dart';
 
+/// This widget represents the main page of the Pokémon app.
+/// It displays a list of Pokémon and allows the user to search for specific Pokémon by name.
+/// It uses the Bloc pattern to manage the state of the Pokémon list and the details of a single Pokémon.
+/// The page includes a search bar and a list of Pokémon, which can be scrolled to load more Pokémon.
 class PokemonsListPage extends StatefulWidget {
   const PokemonsListPage({super.key});
 
@@ -43,7 +48,8 @@ class _PokemonsListPageState extends State<PokemonsListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Who's That Pokémon?"),
+        title: const StyledTitle(text: "Who's That Pokémon?"),
+        backgroundColor: const Color.fromARGB(255, 202, 76, 76),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -51,21 +57,29 @@ class _PokemonsListPageState extends State<PokemonsListPage> {
           ),
         ],
       ),
+      // The BlocListener widget listens for state changes in the SinglePokemonBloc.
+      // When a new state is emitted, it triggers the listener function.
       body: BlocListener<SinglePokemonBloc, SinglePokemonState>(
         listener: (context, state) {
           if (state is SinglePokemonLoaded) {
-            _showPokemonDetailsDialog(context, state.pokemon);
+            showPokemonDetailsDialog(context, state.pokemon);
           } else if (state is SinglePokemonError) {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
+        // The BlocBuilder widget rebuilds the UI based on the current state of the PokemonBloc.
+        // It listens for state changes and rebuilds the widget tree accordingly.
         child: _blocBuilder(),
       ),
     );
   }
 
+  // Shows a modal bottom sheet for searching Pokemons by name.
+  // The modal contains a TextField for input and a button to trigger the search.
+  // When the button is pressed, it dispatches an event to load the Pokemon with the given name.
+  // After the search, it closes the modal.
   void _showSearchModal(BuildContext context) {
     final searchController = TextEditingController();
     showModalBottomSheet(
@@ -103,77 +117,24 @@ class _PokemonsListPageState extends State<PokemonsListPage> {
     );
   }
 
-  void _showPokemonDetailsDialog(BuildContext context, Pokemon pokemon) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(pokemon.name),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (pokemon.imageUrl != null)
-                Image.network(pokemon.imageUrl!)
-              else
-                const SizedBox.shrink(),
-              const SizedBox(height: 16),
-              Text('ID: ${pokemon.id ?? "Unknown"}'),
-              Text('Height: ${pokemon.height ?? "Unknown"}'),
-              Text('Weight: ${pokemon.weight ?? "Unknown"}'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   // Builds the BlocBuilder widget to manage the state of the Pokemon list.
+  // It listens for state changes and rebuilds the UI accordingly.
+  // Depending on the state, it shows a loading indicator, the list of Pokemons,
   BlocBuilder<PokemonBloc, PokemonState> _blocBuilder() {
     return BlocBuilder<PokemonBloc, PokemonState>(
       builder: (context, state) {
         if (state is PokemonLoading && state is PokemonInitial) {
           return Center(child: CircularProgressIndicator());
         } else if (state is PokemonLoaded) {
-          return _pokemonsList(state);
+          return PokemonListView(
+            state: state,
+            scrollController: _scrollController,
+          ); // Use the new widget
         } else if (state is PokemonError) {
           return Center(child: Text('Error: ${state.message}'));
         } else {
           return Center(child: Text('Loading Pokemons...'));
         }
-      },
-    );
-  }
-
-  // Creates a ListView widget to display the list of Pokemons.
-  ListView _pokemonsList(PokemonLoaded state) {
-    return ListView.builder(
-      controller: _scrollController,
-      itemCount: state.pokemons.length + (state.hasReachedMax ? 0 : 1),
-      itemBuilder: (context, index) {
-        if (index >= state.pokemons.length) {
-          return Center(child: CircularProgressIndicator());
-        }
-        final pokemon = state.pokemons[index];
-        return _pokemon(pokemon);
-      },
-    );
-  }
-
-  // Creates a ListTile widget for displaying a Pokemon's name and avatar.
-  ListTile _pokemon(Pokemon pokemon) {
-    return ListTile(
-      title: Text(pokemon.name),
-      leading: CircleAvatar(child: Text(pokemon.name.substring(0, 2))),
-      onTap: () {
-        context.read<SinglePokemonBloc>().add(
-          LoadSinglePokemon(name: pokemon.name),
-        );
       },
     );
   }
